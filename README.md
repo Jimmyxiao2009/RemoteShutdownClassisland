@@ -131,8 +131,4 @@ RemoteShutdownPlugin/
 | `POST` | `/shutdown` | 关机，返回 `{"success":true,"message":"..."}` |
 | `POST` | `/reboot` | 重启，返回 `{"success":true,"message":"..."}` |
 
----
 
-## License
-
-MIT © jimmyxiao
