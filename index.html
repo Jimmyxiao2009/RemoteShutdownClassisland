@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>远程控制面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .ip-info {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            color: white;
+        }
+        .btn-screenshot {
+            background: #4CAF50;
+        }
+        .btn-screenshot:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76,175,80,0.4);
+        }
+        .btn-shutdown {
+            background: #f44336;
+        }
+        .btn-shutdown:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244,67,54,0.4);
+        }
+        .btn-reboot {
+            background: #FF9800;
+        }
+        .btn-reboot:hover {
+            background: #e68900;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,152,0,0.4);
+        }
+        .screenshot-container {
+            text-align: center;
+        }
+        #screenshot {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 18px;
+        }
+        .loading.show {
+            display: block;
+        }
+        .status {
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.show {
+            display: block;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖥️ 远程控制面板</h1>
+        <div class="ip-info">当前访问地址: <strong>{{host}}</strong></div>
+        
+        <div class="warning">
+            ⚠️ 安全提示：请确保只在受信任的网络环境中使用此工具
+        </div>
+
+        <div id="status" class="status"></div>
+        
+        <div class="controls">
+            <button class="btn-screenshot" onclick="takeScreenshot()">📸 截取屏幕</button>
+            <button class="btn-reboot" onclick="confirmAction('reboot')">🔄 重启电脑</button>
+            <button class="btn-shutdown" onclick="confirmAction('shutdown')">🔌 关闭电脑</button>
+        </div>
+
+        <div class="loading" id="loading">⏳ 正在处理...</div>
+        
+        <div class="screenshot-container">
+            <img id="screenshot" src="" alt="截图将显示在这里" style="display:none;">
+        </div>
+    </div>
+
+    <script>
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status show ' + type;
+            setTimeout(() => {
+                status.className = 'status';
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.classList.add('show');
+            } else {
+                loading.classList.remove('show');
+            }
+        }
+
+        async function takeScreenshot() {
+            showLoading(true);
+            try {
+                const response = await fetch('/screenshot');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const img = document.getElementById('screenshot');
+                    img.src = 'data:image/png;base64,' + data.image;
+                    img.style.display = 'block';
+                    showStatus('✅ 截图成功！', 'success');
+                } else {
+                    showStatus('❌ 截图失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showStatus('❌ 网络错误: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function confirmAction(action) {
+            const messages = {
+                'shutdown': '确定要关闭电脑吗？',
+                'reboot': '确定要重启电脑吗？'
+            };
+            
+            if (!confirm(messages[action])) {
+                return;
+            }
+
+            showLoading(true);
+            try {
+                const response = await fetch('/' + action, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('✅ 命令已发送！', 'success');
+                } else {
+                    showStatus('❌ 操作失败: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showStatus('❌ 网络错误: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 页面加载时自动截图
+        window.onload = function() {
+            takeScreenshot();
+        };
+    </script>
+</body>
+</html>

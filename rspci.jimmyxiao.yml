@@ -1,0 +1,23 @@
+# ─────────────────────────────────────────────────────────────
+# ClassIsland 插件市场索引清单（上架用）
+# 此文件不打包进 .cipx，单独提交到：
+#   https://github.com/ClassIsland/PluginIndex/tree/main/index/plugins-v2/
+# 文件名必须与 id 一致：rspci.jimmyxiao.yml
+# ─────────────────────────────────────────────────────────────
+
+# ── 基础字段（与 manifest.yml 保持一致）─────────────────────
+id: rspci.jimmyxiao
+name: 远程关机/截屏控制
+description: 通过局域网网页端远程截屏、关机、重启被控电脑（仅限 Windows）。
+entranceAssembly: RemoteShutdownPlugin.dll
+author: jimmyxiao
+version: 2.0.0.0
+apiVersion: 2.0.0.1
+url: https://github.com/jimmyxiao/RemoteShutdownPlugin
+
+# ── 上架补充字段（发布文档要求）─────────────────────────────
+repoOwner: jimmyxiao                      # GitHub 仓库所有者
+repoName: RemoteShutdownPlugin            # GitHub 仓库名
+assetsRoot: master/RemoteShutdownPlugin   # <默认分支>/<项目相对仓库的路径>
+artifactName: plugin.cipx                 # Release 中要下载的工件文件名
+tagPattern: "2.*.**"                      # 仅匹配 2.x.x.x 系列 Tag（严格 a.b.c.d 格式）

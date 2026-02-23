@@ -1,0 +1,74 @@
+<ci:SettingsPageBase
+    x:Class="RemoteShutdownPlugin.Views.SettingsPages.RemoteControlSettingsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ci="http://classisland.tech/schemas/xaml/core"
+    xmlns:vm="using:RemoteShutdownPlugin.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="600" d:DesignWidth="800"
+    x:DataType="vm:RemoteControlViewModel">
+    <!--
+        Bug 1 修复说明：
+        NumericUpDown.Value 类型为 decimal?，直接绑定 int 属性 Settings.Port
+        在启用全局编译绑定时会造成编译期类型不匹配错误。
+        修复方案：在 csproj 中将 AvaloniaUseCompiledBindingsByDefault 改为 false，
+        全局回退到运行时绑定（无静态类型检查），NumericUpDown 绑定可正常工作。
+        其他绑定仍然正确，x:DataType 保留以供 IDE 提示使用。
+    -->
+
+    <ScrollViewer>
+        <StackPanel Margin="16" Spacing="12">
+
+            <!-- 服务状态卡片 -->
+            <Border Classes="card" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="服务状态" FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="{Binding StatusMessage}"/>
+                    <TextBlock Text="{Binding AccessUrl}"
+                               Cursor="Hand"
+                               TextDecorations="Underline"
+                               PointerPressed="AccessUrl_PointerPressed"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="启 动" Command="{Binding StartCommand}"/>
+                        <Button Content="停 止" Command="{Binding StopCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 连接设置卡片 -->
+            <Border Classes="card" Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="连接设置" FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="监听端口（默认 10543）" FontSize="12" Opacity="0.7"/>
+                    <!--
+                        NumericUpDown.Value 是 decimal?，Settings.Port 是 int。
+                        运行时绑定会自动做类型转换（int → decimal? / decimal? → int），正常工作。
+                    -->
+                    <NumericUpDown Minimum="1024" Maximum="65535"
+                                   Value="{Binding Settings.Port}"
+                                   Increment="1" FormatString="0"/>
+                    <CheckBox Content="ClassIsland 加载时自动启动服务"
+                              IsChecked="{Binding Settings.StartOnLoad}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- 认证设置卡片 -->
+            <Border Classes="card" Padding="16">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="访问认证（HTTP Basic Auth）"
+                               FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="用户名（固定 admin）" FontSize="12" Opacity="0.7"/>
+                    <TextBox Text="admin" IsReadOnly="True"/>
+                    <TextBlock Text="新密码（至少 6 位）" FontSize="12" Opacity="0.7"/>
+                    <TextBox PasswordChar="●" Text="{Binding PendingPassword}"/>
+                    <Button Content="保存密码并热更新"
+                            Command="{Binding SavePasswordCommand}"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+
+</ci:SettingsPageBase>
